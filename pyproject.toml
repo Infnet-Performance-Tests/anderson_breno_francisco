@@ -1,44 +1,29 @@
-[build-system]
-requires = ["setuptools>=80"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "secure-support-agent-lab"
-version = "0.1.0"
-description = "Authenticated FastAPI foundation and EDA workspace for a secure customer-support agent."
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "fastapi>=0.116,<1.0",
-    "pyjwt>=2.10,<3.0",
-    "python-multipart>=0.0.20,<1.0",
-    "uvicorn[standard]>=0.35,<1.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "httpx>=0.28,<1.0",
-    "pytest>=8.4,<9.0",
-    "ruff>=0.12,<1.0",
-]
-eda = [
-    "jupyter>=1.1,<2.0",
-    "matplotlib>=3.10,<4.0",
-    "pandas>=2.3,<3.0",
-    "seaborn>=0.13,<1.0",
-]
+# Este repositório não é distribuído como pacote instalável: as dependências
+# ficam em requirements.txt e a aplicação é executada a partir de `fastapi/`.
+# Este arquivo concentra apenas a configuração das ferramentas de qualidade.
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["fastapi/tests"]
 addopts = "-q"
-
-[tool.setuptools.packages.find]
-include = ["app*"]
-exclude = ["analysis*", "data*", "docs*", "tests*"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+src = ["fastapi"]
+extend-exclude = [".venv", "eda"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+# Módulos locais da aplicação: vivem na raiz de `fastapi/` e são importados
+# de forma absoluta, já que a app é executada de dentro desse diretório.
+known-first-party = [
+    "application",
+    "config",
+    "domain",
+    "main",
+    "models",
+    "routes",
+    "security",
+]

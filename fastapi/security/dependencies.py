@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from app.config import settings
-from app.security.jwt import jwt_service
+from config import settings
+from security.jwt import jwt_service
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 

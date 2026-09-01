@@ -1,4 +1,4 @@
-from app.domain.prediction import Intent, Prediction
+from domain.prediction import Intent, Prediction
 
 
 class PredictionFacade:

@@ -1,7 +1,7 @@
 import hmac
 
-from app.config import settings
-from app.security.jwt import jwt_service
+from config import settings
+from security.jwt import jwt_service
 
 
 class AuthFacade:

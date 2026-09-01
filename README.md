@@ -1,110 +1,253 @@
-# Secure Support Agent Lab
+# Projeto de Bloco — TP1
 
-Base enxuta para o Projeto de Bloco de análise e segurança de agentes de IA. O repositório
-entrega uma API FastAPI autenticada e deixa a EDA preparada para ser preenchida após o download
-do dataset.
+**Grupo:** Anderson, Breno e Francisco
 
-## Decisões de arquitetura
+Análise exploratória do *Customer Support Ticket Dataset* e estrutura base de uma API
+FastAPI com autenticação JWT, servindo de fundação para o sistema de atendimento ao cliente
+com IA que será construído ao longo do bloco.
 
-O desenho aplica Clean Architecture apenas onde ela reduz acoplamento:
+---
 
-```text
-HTTP route -> application facade -> domain/security
-```
+## Objetivo do projeto
 
-- `routes` conhece HTTP e delega os casos de uso.
-- `application` é a fronteira pública da aplicação.
-- `domain` contém apenas conceitos de negócio, sem FastAPI ou Pydantic.
-- `models` contém os contratos HTTP em Pydantic.
-- `security` concentra OAuth2 e JWT.
-- Não há repository, banco, event bus ou interfaces ornamentais porque o TP ainda não precisa
-  deles.
+Definir o domínio do sistema a partir de duas frentes:
 
-## Estrutura
+1. **EDA exploratória** — entender o dataset de tickets de atendimento, avaliar sua qualidade
+   e levantar hipóteses verificáveis sobre as intenções dos usuários.
+2. **API FastAPI autenticada** — estruturar de forma modular a API que servirá o futuro
+   modelo de classificação de intenção, já com autenticação JWT funcional e as fronteiras de
+   confiança mapeadas.
+
+O modelo de machine learning **não** faz parte desta entrega: a rota `POST /predict` devolve
+uma intenção pré-determinada que simula a saída do modelo futuro, mantendo o contrato HTTP
+estável para a troca posterior.
+
+---
+
+## Estrutura de pastas
 
 ```text
 .
-├── main.py
-├── app
-│   ├── application       # Facades/casos de uso
-│   ├── domain            # Conceitos de negócio puros
-│   ├── models            # DTOs Pydantic de entrada e saída
-│   ├── routes            # Endpoints FastAPI
-│   ├── security          # OAuth2PasswordBearer e JWT
-│   └── config.py
-├── analysis
-│   └── 01_initial_eda.ipynb
-├── data
-│   ├── raw               # CSV original, não versionado
-│   └── processed         # Dados derivados, não versionados
-├── docs
-│   ├── dataset.md
-│   ├── dfd-and-cia.md
-│   └── hypotheses.md
-└── tests
+├── README.md                    # este arquivo
+├── requirements.txt             # dependências de execução
+├── pyproject.toml               # configuração de pytest e ruff
+├── Makefile                     # atalhos (install, run, test, notebook, dfd)
+├── .env.example                 # modelo da variável JWT_SECRET_KEY
+│
+├── data/
+│   ├── customer_support_tickets.csv    # dataset original do Kaggle, sem alterações
+│   └── processed/                      # saída da limpeza da EDA (não versionado)
+│
+├── eda/
+│   └── eda_customer_support_tickets.ipynb   # EDA completa, com as saídas já executadas
+│
+├── fastapi/                     # código-fonte da aplicação
+│   ├── main.py                  # ponto de entrada (uvicorn main:app)
+│   ├── config.py                # credencial do admin e parâmetros do JWT
+│   ├── routes/                  # definição dos endpoints
+│   │   ├── health.py            #   GET  /health
+│   │   ├── auth.py              #   POST /auth/token
+│   │   └── predict.py           #   POST /predict  (protegida)
+│   ├── models/                  # modelos Pydantic de entrada e saída
+│   │   ├── health.py
+│   │   ├── auth.py
+│   │   └── prediction.py
+│   ├── security/                # segurança e autenticação
+│   │   ├── jwt.py               #   geração e validação do token JWT
+│   │   └── dependencies.py      #   OAuth2PasswordBearer + dependência de admin
+│   ├── application/             # casos de uso (fronteira entre rotas e domínio)
+│   ├── domain/                  # conceitos de negócio, sem FastAPI nem Pydantic
+│   └── tests/                   # testes automatizados das três rotas
+│
+└── others/
+    ├── dfd.png                  # DFD da API com entradas, saídas e trust boundaries
+    ├── dfd-and-cia.md           # análise CIA por componente e ameaças priorizadas
+    └── generate_dfd.py          # script que gera o dfd.png
 ```
 
-## Como executar
+### Por que a aplicação está organizada assim
 
-Requisito: Python 3.12 ou superior.
+O fluxo é sempre o mesmo, em uma direção só:
+
+```text
+routes (HTTP)  ->  application (caso de uso)  ->  domain / security
+```
+
+- `routes` conhece HTTP e delega; não contém regra de negócio.
+- `application` é a fronteira pública da aplicação.
+- `domain` guarda conceitos de negócio puros, sem dependência de framework.
+- `models` contém os contratos HTTP em Pydantic.
+- `security` concentra OAuth2 e JWT.
+
+Não há repositório, banco de dados nem *event bus* porque esta entrega não precisa deles.
+
+---
+
+## Instalação
+
+Requisito: **Python 3.12 ou superior**.
 
 ```bash
+# 1. clonar e entrar no repositório
+git clone <url-do-repositorio>
+cd anderson_breno_francisco
+
+# 2. criar e ativar o ambiente virtual
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-python -m pip install -e ".[dev,eda]"
-cp .env.example .env
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# 3. instalar as dependências
+python -m pip install -r requirements.txt
+
+# 4. definir a chave de assinatura do JWT
+cp .env.example .env             # e substituir o valor por um segredo aleatório
 ```
 
-Exporte a chave do `.env` no seu shell ou defina `JWT_SECRET_KEY` diretamente. Em seguida:
+O `requirements.txt` cobre as três frentes: API, EDA e testes.
+
+---
+
+## Execução
+
+### API
+
+O comando exigido pelo enunciado é executado **de dentro do diretório `fastapi/`**, onde
+está o `main.py`:
 
 ```bash
+cd fastapi
 uvicorn main:app --reload
 ```
 
-A documentação interativa ficará em `http://127.0.0.1:8000/docs`.
+A API sobe em `http://127.0.0.1:8000` e a documentação interativa fica em
+`http://127.0.0.1:8000/docs`.
 
-### Credencial acadêmica
+> Defina `JWT_SECRET_KEY` no ambiente antes de subir. Sem ela, a aplicação usa um valor
+> padrão explicitamente marcado como de desenvolvimento.
 
-- usuário: `admin`
-- senha: `admin123`
+### Notebook da EDA
 
-A credencial em código existe apenas porque o enunciado exige. Em produção, ela deve migrar
-para um provedor de identidade ou armazenamento de credenciais com hash. A chave JWT já pode ser
-injetada por variável de ambiente.
+```bash
+jupyter lab eda/eda_customer_support_tickets.ipynb
+```
+
+O notebook já está **executado e com todas as saídas salvas** — gráficos, tabelas e testes
+estatísticos são visíveis sem precisar rodar nada.
+
+### Testes
+
+```bash
+pytest            # 6 testes cobrindo as três rotas e a proteção do /predict
+ruff check .      # análise estática
+```
+
+### Regerar o DFD
+
+```bash
+python others/generate_dfd.py
+```
+
+---
 
 ## Endpoints
 
-```bash
-curl http://127.0.0.1:8000/health
+| Método | Rota | Autenticação | Descrição |
+| --- | --- | --- | --- |
+| `GET` | `/health` | Não | Verifica se a API está ativa. |
+| `POST` | `/auth/token` | Não | Autentica o admin e devolve um JWT válido por 30 minutos. |
+| `POST` | `/predict` | **Sim (Bearer)** | Recebe um texto e devolve uma intenção simulada. |
 
+### Credencial
+
+| Campo | Valor |
+| --- | --- |
+| usuário | `admin` |
+| senha | `admin123` |
+
+A credencial fica no código (`fastapi/config.py`) porque o enunciado exige. É uma exposição
+conhecida e documentada: em produção ela migraria para um provedor de identidade com senha
+em *hash*. A chave de assinatura do JWT, essa sim, já é injetada por variável de ambiente.
+
+### Exemplos
+
+```bash
+# 1. saúde da API
+curl http://127.0.0.1:8000/health
+# {"status":"ok"}
+
+# 2. obter o token
 curl -X POST http://127.0.0.1:8000/auth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=admin&password=admin123"
+# {"access_token":"eyJhbGciOiJIUzI1NiIs...","token_type":"bearer"}
 
+# 3. usar o token na rota protegida
 curl -X POST http://127.0.0.1:8000/predict \
   -H "Authorization: Bearer SEU_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"text":"I need help with a refund"}'
+# {"intent":"general_inquiry","confidence":1.0,"model_version":"stub-v0"}
+
+# 4. sem token, a rota protegida recusa
+curl -i -X POST http://127.0.0.1:8000/predict \
+  -H "Content-Type: application/json" -d '{"text":"teste"}'
+# HTTP/1.1 401 Unauthorized
 ```
 
-## Dataset e EDA
+---
 
-O arquivo `customer_support_tickets.csv` já está incluído em `data/raw/`, preservado sem
-alterações. A fonte é o
-[Customer Support Ticket Dataset](https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset/data).
+## Dataset
 
-1. Execute `jupyter lab analysis/01_initial_eda.ipynb`.
-2. Preencha as interpretações e as três hipóteses somente depois de observar os resultados.
+**Customer Support Ticket Dataset** — publicado por `suraj520` no Kaggle
+([link](https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset/data)),
+licença CC0 (domínio público). São **8.469 tickets × 17 colunas**, cobrindo o texto livre do
+cliente, a categorização do atendimento e métricas operacionais.
 
-## Qualidade
+A cópia original está em `data/customer_support_tickets.csv` e é preservada sem alterações.
+A documentação técnica completa — fonte, características e motivo da escolha — está na
+**seção 0 do notebook**.
 
-```bash
-pytest
-ruff check .
-ruff format --check .
-```
+### Principais achados da EDA
+
+1. **A ausência de dados é estrutural, não aleatória.** `Resolution`, `Time to Resolution` e
+   `Customer Satisfaction Rating` estão preenchidas em exatamente os 2.769 tickets `Closed`;
+   `First Response Time` falta exatamente nos 2.819 tickets `Open`. Por isso nada foi
+   imputado — imputar inventaria uma nota de satisfação para um ticket ainda aberto.
+2. **Não há desbalanceamento de classes.** Todas as categóricas são praticamente uniformes
+   (desbalanceamento ≤ 1,20x), o que é irrealista para uma operação real de suporte.
+3. **O texto não prediz o rótulo.** O qui-quadrado não rejeita a independência em nenhum par
+   testado (texto × assunto: p=0,911; assunto × tipo: p=0,981; canal × tipo: p=0,458), com
+   V de Cramér sempre abaixo de 0,04. Textos idênticos aparecem sob rótulos diferentes.
+4. **Um único template de abertura cobre 69,3% dos tickets**, e 100% das descrições continham
+   o placeholder `{product_purchased}` não renderizado.
+5. **O conjunto é sintético.** As evidências acima, somadas à incoerência temporal (em 49,3%
+   dos tickets encerrados a resolução ocorre *antes* da primeira resposta), sustentam essa
+   conclusão.
+
+O notebook registra **5 hipóteses verificáveis** sobre as intenções dos usuários, cada uma
+com o padrão observado, o método de teste e ao menos uma explicação alternativa.
+
+---
+
+## Segurança
+
+O DFD da API está em **[`others/dfd.png`](others/dfd.png)** e a análise da tríade CIA por
+componente, junto com as ameaças priorizadas, em
+**[`others/dfd-and-cia.md`](others/dfd-and-cia.md)**.
+
+Controles já implementados nesta entrega:
+
+- `/predict` protegida por `OAuth2PasswordBearer` e JWT válido.
+- Token com `sub`, `iat` e `exp` (30 minutos), aceitando apenas o algoritmo configurado.
+- Comparação de credenciais em tempo constante (`hmac.compare_digest`).
+- Resposta `401` genérica, que não revela qual campo falhou.
+- Validação estrita de entrada e saída com Pydantic, com limite de 5.000 caracteres no texto.
+- A API não ecoa nem registra o texto do ticket, que pode conter dados pessoais.
+- Chave de assinatura fora do código, via `JWT_SECRET_KEY`.
+
+---
 
 ## Referências
 
-- [Dataset no Kaggle](https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset/data)
-- [FastAPI: OAuth2 Password Bearer com JWT](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/)
+- [Customer Support Ticket Dataset (Kaggle)](https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset/data)
+- [FastAPI — OAuth2 com JWT](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/)
