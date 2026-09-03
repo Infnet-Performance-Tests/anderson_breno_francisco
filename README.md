@@ -199,34 +199,67 @@ curl -i -X POST http://127.0.0.1:8000/predict \
 
 ## Dataset
 
-**Customer Support Ticket Dataset** — publicado por `suraj520` no Kaggle
-([link](https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset/data)),
-licença CC0 (domínio público). São **8.469 tickets × 17 colunas**, cobrindo o texto livre do
-cliente, a categorização do atendimento e métricas operacionais.
+### Fonte
 
-A cópia original está em `data/customer_support_tickets.csv` e é preservada sem alterações.
-A documentação técnica completa — fonte, características e motivo da escolha — está na
-**seção 0 do notebook**.
+| Item | Valor |
+| --- | --- |
+| Nome | Customer Support Ticket Dataset |
+| Publicador no Kaggle | `suraj520` |
+| URL | https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset/data |
+| Arquivo | `customer_support_tickets.csv` |
+| Licença declarada | CC0 — domínio público |
+| Cópia no repositório | `data/customer_support_tickets.csv`, preservada sem alterações |
 
-### Principais achados da EDA
+A publicação descreve tickets de suporte ao cliente sobre produtos de tecnologia. Ela **não
+informa a empresa de origem nem o processo de coleta** — a proveniência se encerra na
+publicação do Kaggle.
 
-1. **A ausência de dados é estrutural, não aleatória.** `Resolution`, `Time to Resolution` e
-   `Customer Satisfaction Rating` estão preenchidas em exatamente os 2.769 tickets `Closed`;
-   `First Response Time` falta exatamente nos 2.819 tickets `Open`. Por isso nada foi
-   imputado — imputar inventaria uma nota de satisfação para um ticket ainda aberto.
-2. **Não há desbalanceamento de classes.** Todas as categóricas são praticamente uniformes
-   (desbalanceamento ≤ 1,20x), o que é irrealista para uma operação real de suporte.
-3. **O texto não prediz o rótulo.** O qui-quadrado não rejeita a independência em nenhum par
-   testado (texto × assunto: p=0,911; assunto × tipo: p=0,981; canal × tipo: p=0,458), com
-   V de Cramér sempre abaixo de 0,04. Textos idênticos aparecem sob rótulos diferentes.
-4. **Um único template de abertura cobre 69,3% dos tickets**, e 100% das descrições continham
-   o placeholder `{product_purchased}` não renderizado.
-5. **O conjunto é sintético.** As evidências acima, somadas à incoerência temporal (em 49,3%
-   dos tickets encerrados a resolução ocorre *antes* da primeira resposta), sustentam essa
-   conclusão.
+### Principais características
 
-O notebook registra **5 hipóteses verificáveis** sobre as intenções dos usuários, cada uma
-com o padrão observado, o método de teste e ao menos uma explicação alternativa.
+**8.469 registros × 17 colunas**, com granularidade de **um ticket** por linha — não um
+cliente e não uma conversa completa.
+
+| Grupo | Variáveis |
+| --- | --- |
+| Identificação | `Ticket ID` |
+| Dados do cliente | `Customer Name`, `Customer Email`, `Customer Age`, `Customer Gender` |
+| Produto e compra | `Product Purchased`, `Date of Purchase` |
+| Conteúdo / intenção | `Ticket Type`, `Ticket Subject`, `Ticket Description` |
+| Operação do atendimento | `Ticket Status`, `Resolution`, `Ticket Priority`, `Ticket Channel` |
+| Tempos e avaliação | `First Response Time`, `Time to Resolution`, `Customer Satisfaction Rating` |
+
+Dois pontos condicionam o tratamento dos dados:
+
+- Os campos ligados ao encerramento (`Resolution`, `Time to Resolution`,
+  `Customer Satisfaction Rating`) podem estar ausentes em tickets ainda não encerrados. A
+  ausência precisa ser lida junto de `Ticket Status`, e não tratada automaticamente como erro.
+- `Customer Name` e `Customer Email` são **dados pessoais**. Mesmo em um conjunto público,
+  não devem aparecer em logs, gráficos, respostas da API ou exemplos de documentação — o que
+  se reflete nos controles descritos em [Segurança](#segurança).
+
+### Motivo da escolha
+
+O conjunto foi escolhido porque atende, ao mesmo tempo, aos três eixos do bloco:
+
+- **Texto livre do cliente** (`Ticket Description`), insumo direto da classificação de
+  intenção que será construída nas etapas seguintes.
+- **Categorias de atendimento** (`Ticket Type`, `Ticket Subject`) que servem como referência
+  inicial de rótulo, sem exigir anotação manual.
+- **Variáveis operacionais e temporais** suficientes para análise estatística e para a
+  formulação de hipóteses sobre as intenções dos usuários.
+- **Cenários de segurança realistas** para a etapa de ataque: dados pessoais no conjunto,
+  entrada textual não confiável chegando pela API e inferência acessível apenas mediante
+  autenticação.
+
+### Análise exploratória
+
+A EDA completa está em **[`eda/eda.ipynb`](eda/eda.ipynb)**, já executada e com as saídas
+salvas, cobrindo os cinco passos pedidos: compreensão do problema, inspeção inicial,
+verificação da qualidade dos dados, limpeza e preparação, e análise univariada.
+
+As **3 hipóteses sobre as intenções dos usuários**, derivadas da análise univariada, estão em
+**[`eda/hipoteses.md`](eda/hipoteses.md)**: necessidade de informação sobre produtos,
+descontinuidade no atendimento e atrito no processo de decisão de compra.
 
 ---
 
