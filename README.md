@@ -35,11 +35,11 @@ estável para a troca posterior.
 ├── .env.example                 # modelo da variável JWT_SECRET_KEY
 │
 ├── data/
-│   ├── customer_support_tickets.csv    # dataset original do Kaggle, sem alterações
-│   └── processed/                      # saída da limpeza da EDA (não versionado)
+│   └── customer_support_tickets.csv    # dataset original do Kaggle, sem alterações
 │
 ├── eda/
-│   └── eda_customer_support_tickets.ipynb   # EDA completa, com as saídas já executadas
+│   ├── eda.ipynb                # EDA completa, com as saídas já executadas
+│   └── hipoteses.md             # hipóteses sobre as intenções dos usuários
 │
 ├── fastapi/                     # código-fonte da aplicação
 │   ├── main.py                  # ponto de entrada (uvicorn main:app)
@@ -128,11 +128,12 @@ A API sobe em `http://127.0.0.1:8000` e a documentação interativa fica em
 ### Notebook da EDA
 
 ```bash
-jupyter lab eda/eda_customer_support_tickets.ipynb
+jupyter lab eda/eda.ipynb
 ```
 
-O notebook já está **executado e com todas as saídas salvas** — gráficos, tabelas e testes
-estatísticos são visíveis sem precisar rodar nada.
+O notebook já está **executado e com todas as saídas salvas** — gráficos e tabelas são
+visíveis sem precisar rodar nada. Ele baixa o dataset via `kagglehub` na primeira execução.
+As hipóteses derivadas da análise estão em `eda/hipoteses.md`.
 
 ### Testes
 

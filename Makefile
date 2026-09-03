@@ -16,7 +16,7 @@ format:
 	ruff format .
 
 notebook:
-	jupyter lab eda/eda_customer_support_tickets.ipynb
+	jupyter lab eda/eda.ipynb
 
 dfd:
 	python others/generate_dfd.py
