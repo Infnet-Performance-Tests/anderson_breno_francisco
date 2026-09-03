@@ -3,7 +3,7 @@ from datetime import UTC, datetime, timedelta
 import jwt
 from jwt.exceptions import InvalidTokenError
 
-from app.config import settings
+from config import settings
 
 
 class JwtService:

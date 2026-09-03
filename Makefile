@@ -1,10 +1,10 @@
-.PHONY: install run test lint format notebook
+.PHONY: install run test lint format notebook dfd
 
 install:
-	python -m pip install -e ".[dev,eda]"
+	python -m pip install -r requirements.txt
 
 run:
-	uvicorn main:app --reload
+	cd fastapi && uvicorn main:app --reload
 
 test:
 	pytest
@@ -16,5 +16,7 @@ format:
 	ruff format .
 
 notebook:
-	jupyter lab analysis/01_initial_eda.ipynb
+	jupyter lab eda/eda.ipynb
 
+dfd:
+	python others/generate_dfd.py

@@ -2,7 +2,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from app.domain.prediction import Intent
+from domain.prediction import Intent
 
 TicketText = Annotated[
     str,

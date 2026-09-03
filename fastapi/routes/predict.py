@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from app.application.prediction_facade import prediction_facade
-from app.models.prediction import PredictionRequest, PredictionResponse
-from app.security.dependencies import CurrentAdmin
+from application.prediction_facade import prediction_facade
+from models.prediction import PredictionRequest, PredictionResponse
+from security.dependencies import CurrentAdmin
 
 router = APIRouter(tags=["prediction"])
 
