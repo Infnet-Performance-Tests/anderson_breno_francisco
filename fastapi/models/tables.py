@@ -1,12 +1,13 @@
 """Tabelas do banco (SQLModel)."""
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 
 from pydantic import NaiveDatetime
 from sqlmodel import Field, SQLModel
 
 
 def _utcnow() -> NaiveDatetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class User(SQLModel, table=True):

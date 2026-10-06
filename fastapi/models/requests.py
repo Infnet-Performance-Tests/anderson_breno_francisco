@@ -1,12 +1,10 @@
-"""Modelos Pydantic de ENTRADA. Todos rejeitam campos extras (extra='forbid')."""
-from pydantic import BaseModel, ConfigDict, Field
+"""Base dos modelos Pydantic de ENTRADA: rejeita qualquer campo não declarado (extra='forbid').
+
+Todo body recebido pela API deve herdar de StrictRequest.
+"""
+
+from pydantic import BaseModel, ConfigDict
 
 
 class StrictRequest(BaseModel):
-    """Base de todos os bodies recebidos pela API."""
-
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-
-
-class PredictRequest(StrictRequest):
-    text: str = Field(min_length=1, max_length=2000)
+    model_config = ConfigDict(extra="forbid")

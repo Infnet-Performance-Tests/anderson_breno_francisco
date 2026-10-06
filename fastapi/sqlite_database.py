@@ -4,9 +4,10 @@ Uso (a partir da pasta fastapi/):
     python sqlite_database.py            # cria e popula se ainda estiver vazio
     python sqlite_database.py --reset    # apaga o database.db e recria do zero
 """
+
 import sqlite3
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from security.passwords import hash_password
@@ -50,7 +51,7 @@ SEED_PREDICTIONS = [
 
 def _now() -> str:
     # Formato aceito pelo SQLAlchemy/SQLModel para colunas DateTime no SQLite.
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+    return datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
 def init_db(db_path: Path | str = DB_PATH, reset: bool = False) -> Path:

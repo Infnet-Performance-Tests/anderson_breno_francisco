@@ -1,4 +1,5 @@
 """Hash e verificação de senhas usando apenas a biblioteca padrão (PBKDF2-HMAC-SHA256)."""
+
 import hashlib
 import hmac
 import secrets

@@ -1,4 +1,5 @@
 """Engine e dependência de sessão do SQLModel."""
+
 import os
 from pathlib import Path
 
