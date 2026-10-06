@@ -2,6 +2,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from main import app
+from security.rate_limit import limiter
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter() -> None:
+    limiter.reset()
 
 
 @pytest.fixture
