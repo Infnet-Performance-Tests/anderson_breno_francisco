@@ -3,6 +3,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from domain.prediction import Intent
+from models.requests import StrictRequest
 
 TicketText = Annotated[
     str,
@@ -10,7 +11,7 @@ TicketText = Annotated[
 ]
 
 
-class PredictionRequest(BaseModel):
+class PredictionRequest(StrictRequest):
     text: TicketText
 
 
