@@ -1,0 +1,12 @@
+name: support-agent-api
+
+services:
+  api:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"

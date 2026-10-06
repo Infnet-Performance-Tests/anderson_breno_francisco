@@ -19,5 +19,12 @@ class Settings:
         "local-development-only-secret-change-before-deploying",
     )
 
+    allowed_origins: tuple[str, ...] = tuple(
+        origin.strip()
+        for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+        if origin.strip()
+    )
+    auth_rate_limit: str = "10/minute"
+
 
 settings = Settings()
